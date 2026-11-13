@@ -3,8 +3,7 @@ import { Pool } from 'pg';
 import promptSync = require('prompt-sync');
 import { login } from './usuario';
 const prompt = promptSync({ sigint: true });
-
-let escolha = 1
+import { runner } from 'node-pg-migrate'
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -14,22 +13,22 @@ const pool = new Pool({
     port: Number(process.env.DB_PORT),
 });
 
-async function consultar() {
+async function runMigrations() {
     const client = await pool.connect();
     try {
-        const res = await client.query('SELECT NOW()');
-        console.log('Horário do banco:', res.rows[0]);
+        await runner({
+            dbClient: client,
+            dir: 'migrations',
+            direction: 'up',
+            migrationsTable: 'pgmigrations',
+        })
+        console.log('Migrações executadas com sucesso!');
+    } catch (error) {
+        console.error('Erro ao rodar migrações:', error);
     } finally {
-        client.release();
+        await client.end()
     }
 }
-
-consultar();
-
-// do {
-//     login();
-// } while (escolha != 0);
-
-
+runMigrations()
 
 
