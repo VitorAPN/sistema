@@ -4,6 +4,8 @@ import promptSync = require('prompt-sync');
 const prompt = promptSync({ sigint: true });
 import { runner } from 'node-pg-migrate'
 import UsuarioService from './usuarioService';
+import { Usuario } from './types';
+import PermissoesHelper from './permissoesHelper';
 
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -22,15 +24,15 @@ const pool = new Pool({
     console.log("==Entre com suas credenciais==")
     const email = prompt("Digite seu email: ");
     const senha = prompt("Digite sua senha: ");
-    const loginSucesso = await usuarioService.login({ email, senha });
-    if (loginSucesso) {
-        await menu(usuarioService);
+    const usuarioLogado = await usuarioService.login({ email, senha });
+    if (usuarioLogado) {
+        await menu(usuarioService, usuarioLogado);
     }
     await client.end();
 })()
 
 
-async function menu(usuarioService: UsuarioService) {
+async function menu(usuarioService: UsuarioService, usuarioLogado: Usuario) {
     let escolha: number = 9
     do {
         console.log("===Menu de usuários===");
@@ -41,9 +43,13 @@ async function menu(usuarioService: UsuarioService) {
         escolha = Number(prompt('Qual sua escolha?'));
         switch (escolha) {
             case 1:
-                const email = prompt("Digite o email: ");
-                const senha = prompt("Digite a senha: ");
-                await usuarioService.cadastrar({ email, senha });
+                if (PermissoesHelper.autoriza(usuarioLogado, 'GERENCIAR_USUARIOS')) {
+                    const email = prompt("Digite o email: ");
+                    const senha = prompt("Digite a senha: ");
+                    await usuarioService.cadastrar({ email, senha });
+                } else {
+                    console.log('Você não tem permissão');
+                }
                 break;
             case 2:
                 console.log(await usuarioService.listarTodos());
