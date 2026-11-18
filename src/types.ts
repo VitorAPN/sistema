@@ -8,6 +8,18 @@ interface Usuario {
     id: number,
     email: string,
     senha: string
+    perfil: Perfil
+}
+
+interface Perfil {
+    id: number,
+    nome: "Admin" | "Restaurante" | "Cliente" | "Entregador"
+    permissoes: Permissoes[]
+}
+
+interface Permissoes {
+    id: number,
+    descricao: string
 }
 
 interface Cliente extends Pessoa {
@@ -53,4 +65,6 @@ export type {
     Entregador,
     Pedido,
     Produto,
+    Perfil,
+    Permissoes
 }
